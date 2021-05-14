@@ -40,13 +40,21 @@ FusionEKF::FusionEKF() {
   H_laser_ <<  1, 0, 0, 0,
                0, 1, 0, 0;
   
-  // the initial transition matrix F_
+  // create a 4D state vector, we don't know yet the values of the x state
+  VectorXd x = VectorXd(4);
+  
+  // the initial transition matrix F
   // it will be updated with dt
-  ekf_.F_ = MatrixXd(4, 4);
-  ekf_.F_ << 1, 0, 1, 0,
-            0, 1, 0, 1,
-            0, 0, 1, 0,
-            0, 0, 0, 1;
+  MatrixXd F = MatrixXd(4, 4);
+  F << 1, 0, 1, 0,
+       0, 1, 0, 1,
+       0, 0, 1, 0,
+       0, 0, 0, 1;
+  
+  MatrixXd Q = MatrixXd::Zero(4, 4);
+  MatrixXd P = MatrixXd::Zero(4, 4);
+  
+  ekf_.Init(x, P, F, H_laser_, R_laser_, Q);
    
   // set the acceleration noise components
   noise_ax = 9;
@@ -71,8 +79,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
     // first measurement
     cout << "EKF: " << endl;
-    ekf_.x_ = VectorXd(4);
-    ekf_.x_ << 1, 1, 1, 1;
+    // ekf_.x_ = VectorXd(4);
+    // ekf_.x_ << 1, 1, 1, 1;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       // TODO: Convert radar from polar to cartesian coordinates 
@@ -140,7 +148,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   float dt3 = dt2 * dt;
   float dt4 = dt3 * dt;
   
-  ekf_.Q_ = MatrixXd(4, 4);
   ekf_.Q_ << (dt4/4) * noise_ax, 0, (dt3/2) * noise_ax, 0,
             0, (dt4/4) * noise_ay, 0, (dt3/2) * noise_ay,
             (dt3/2) * noise_ax, 0, dt2 * noise_ax, 0,
