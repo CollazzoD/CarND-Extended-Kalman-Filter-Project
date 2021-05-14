@@ -29,7 +29,9 @@ void KalmanFilter::Predict() {
 }
 
 void KalmanFilter::Update(const VectorXd &z) {
-  
+  VectorXd z_pred = H_ * x_;
+  VectorXd y = z - z_pred;
+  CommonUpdate(y);
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
