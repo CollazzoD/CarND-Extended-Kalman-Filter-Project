@@ -38,6 +38,26 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   /**
    * TODO: update the state by using Extended Kalman Filter equations
    */
+  double px = x_(0);
+  double py = x_(1);
+  double vx = x_(2);
+  double vy = x_(3);
+
+  // Map the predicted x' from Cartesian coordinates to polar coordinates
+  // function h(x') of EKF as seen in the course
+  double rho = sqrt(px*px + py*py);
+  double theta = atan2(py, px);
+  double rho_dot = (px*vx + py*vy) / rho;
+  VectorXd h = VectorXd(3);
+  h << rho, theta, rho_dot;
+  VectorXd y = z - h;
+  
+  // Make sure that the angle is between -pi and pi
+  // by adding/subtracting 2pi until is in range
+  for (; y(1) < -M_PI; y(1) += 2*M_PI) {}
+  for (; y(1) > M_PI; y(1) -= 2*M_PI) {}
+  
+  CommonUpdate(y);
 }
 
 void KalmanFilter::CommonUpdate(const VectorXd &y){
