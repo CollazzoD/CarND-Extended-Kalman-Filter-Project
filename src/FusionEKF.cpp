@@ -41,6 +41,7 @@ FusionEKF::FusionEKF() {
                0, 1, 0, 0;
   
   // the initial transition matrix F_
+  // it will be updated with dt
   ekf_.F_ = MatrixXd(4, 4);
   ekf_.F_ << 1, 0, 1, 0,
             0, 1, 0, 1,
@@ -76,12 +77,38 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       // TODO: Convert radar from polar to cartesian coordinates 
       //         and initialize state.
+      float ro =  measurement_pack.raw_measurements_[0];
+      float theta =  measurement_pack.raw_measurements_[1];
+      float ro_dot =  measurement_pack.raw_measurements_[2];
 
+      float px = cos(theta) * ro;
+      float py = sin(theta) * ro;
+      float vx = cos(theta) * ro_dot;
+      float vy = sin(theta) * ro_dot;
+
+      // we are more certain about the speed
+      ekf_.P_ <<  1, 0, 0, 0,
+                  0, 1, 0, 0,
+                  0, 0, 10, 0,
+                  0, 0, 0, 10;
+
+      ekf_.x_ << px, py, vx, vy;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       // TODO: Initialize state.
+      float px = measurement_pack.raw_measurements_[0];
+      float py = measurement_pack.raw_measurements_[1];
 
+      // we are uncertain about the speed
+      ekf_.P_ <<  1, 0, 0, 0,
+                  0, 1, 0, 0,
+                  0, 0, 1000, 0,
+                  0, 0, 0, 1000;
+
+      ekf_.x_ << px, py, 0, 0;
     }
+    
+    previous_timestamp_ = measurement_pack.timestamp_;
 
     // done initializing, no need to predict or update
     is_initialized_ = true;
