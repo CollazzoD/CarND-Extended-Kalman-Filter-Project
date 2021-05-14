@@ -35,9 +35,6 @@ void KalmanFilter::Update(const VectorXd &z) {
 }
 
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
-  /**
-   * TODO: update the state by using Extended Kalman Filter equations
-   */
   double px = x_(0);
   double py = x_(1);
   double vx = x_(2);
